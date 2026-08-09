@@ -2,9 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
-}
+/* color-scheme is set per daisyUI theme (cupcake=light, forest=dark) so native
+   controls, scrollbars, and form fields match the active mode. */
 
 /* Let cards breathe — gentle elevation, no heavy shadows. */
 .card {

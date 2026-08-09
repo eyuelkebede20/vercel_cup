@@ -12,7 +12,10 @@ const config: Config = {
   },
   plugins: [daisyui],
   daisyui: {
-    themes: ["winter"],
+    // cupcake = light, forest = dark. First entry is the default light theme;
+    // darkTheme is used when the system prefers dark (and by our toggle).
+    themes: ["cupcake", "forest"],
+    darkTheme: "forest",
     logs: false,
   },
 };

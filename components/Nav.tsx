@@ -2,6 +2,7 @@ import Link from "next/link";
 import { APP_NAME } from "@/lib/constants";
 import { getCurrentUser } from "@/lib/session";
 import { SignOutButton } from "./SignOutButton";
+import { ThemeToggle } from "./ThemeToggle";
 
 export async function Nav() {
   const user = await getCurrentUser();
@@ -14,6 +15,7 @@ export async function Nav() {
         </Link>
       </div>
       <div className="flex items-center gap-1">
+        <ThemeToggle />
         <Link href="/leagues" className="btn btn-ghost btn-sm">
           Discover
         </Link>

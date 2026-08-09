@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { eq, inArray, asc } from "drizzle-orm";
 import { db } from "./db";
 import { tournament, team, player, match, goal } from "./db/schema";
 import { requireUser } from "./session";
@@ -99,9 +99,21 @@ export async function regenerateFixtures(tournamentId: string): Promise<void> {
   const teamRows = await db
     .select({ id: team.id })
     .from(team)
-    .where(eq(team.tournamentId, tournamentId));
+    .where(eq(team.tournamentId, tournamentId))
+    .orderBy(asc(team.name));
 
-  // Cascade from match deletes goals.
+  // Find matches so we can defensively delete goals, in case DB constraints are missing
+  const matchRows = await db
+    .select({ id: match.id })
+    .from(match)
+    .where(eq(match.tournamentId, tournamentId));
+
+  if (matchRows.length > 0) {
+    const matchIds = matchRows.map((m) => m.id);
+    await db.delete(goal).where(inArray(goal.matchId, matchIds));
+  }
+
+  // Now delete the matches
   await db.delete(match).where(eq(match.tournamentId, tournamentId));
 
   const fixtures = generateRoundRobin(

@@ -4,9 +4,13 @@ import {
   getCompetitionStandings,
   getCompetitionName,
   isLeaguesConfigured,
+  sampleMatches,
+  sampleStandings,
+  SAMPLE_NOTICE,
 } from "@/lib/leagues";
 import { FixtureCard } from "@/components/FixtureCard";
 import { StandingsTable } from "@/components/StandingsTable";
+import type { MatchView, StandingView } from "@/lib/types";
 
 export default async function CompetitionPage({
   params,
@@ -15,47 +19,50 @@ export default async function CompetitionPage({
 }) {
   const { code } = await params;
 
-  if (!isLeaguesConfigured()) {
-    return (
-      <div className="space-y-4">
-        <Link href="/leagues" className="btn btn-ghost btn-sm">
-          ← All leagues
-        </Link>
-        <div className="alert alert-warning">
-          <span>
-            External data isn&apos;t configured. Set <code>FOOTBALL_DATA_KEY</code>.
-          </span>
-        </div>
-      </div>
-    );
-  }
-
   let name = code;
-  let matches: Awaited<ReturnType<typeof getCompetitionMatches>> = [];
-  let standings: Awaited<ReturnType<typeof getCompetitionStandings>> = [];
+  let matches: MatchView[] = [];
+  let standings: StandingView[] = [];
+  let sample = !isLeaguesConfigured();
   let error: string | null = null;
 
-  try {
-    [name, matches, standings] = await Promise.all([
-      getCompetitionName(code),
-      getCompetitionMatches(code),
-      getCompetitionStandings(code),
-    ]);
-  } catch (e) {
-    error =
-      e instanceof Error
-        ? e.message
-        : "Couldn't load this league right now.";
+  if (isLeaguesConfigured()) {
+    try {
+      [name, matches, standings] = await Promise.all([
+        getCompetitionName(code),
+        getCompetitionMatches(code),
+        getCompetitionStandings(code),
+      ]);
+    } catch {
+      // API hiccup / rate limit — fall back to the sample so the page still works.
+      sample = true;
+    }
+  }
+
+  if (sample) {
+    name = await getCompetitionName(code).catch(() => code);
+    matches = sampleMatches();
+    standings = sampleStandings();
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{name}</h1>
+        <div>
+          <h1 className="text-2xl font-bold">{name}</h1>
+          {sample && (
+            <span className="badge badge-ghost badge-sm mt-1">Sample data</span>
+          )}
+        </div>
         <Link href="/leagues" className="btn btn-ghost btn-sm">
           ← All leagues
         </Link>
       </div>
+
+      {sample && (
+        <div className="alert">
+          <span>{SAMPLE_NOTICE}</span>
+        </div>
+      )}
 
       {error ? (
         <div className="alert alert-error">
