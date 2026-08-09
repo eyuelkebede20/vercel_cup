@@ -15,10 +15,17 @@ const trustedOrigins = [
 ];
 if (process.env.BETTER_AUTH_URL) trustedOrigins.push(process.env.BETTER_AUTH_URL);
 
+const getBaseURL = () => {
+  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+};
+
 // better-auth server instance. Uses the Supabase DB through the Drizzle
 // adapter (provider:"pg"). Email/password only — no Supabase Auth.
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: getBaseURL(),
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins,
   database: drizzleAdapter(db, {
