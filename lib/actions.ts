@@ -67,25 +67,71 @@ export async function createTournament(
         name: teamNameFor(setup.teamNames, i),
       })),
     )
-    .returning({ id: team.id });
+    .returning({ id: team.id, name: team.name });
 
-  // 3. Fixtures — single round-robin (doubled if requested), if requested.
+  // 3. Historical matches (if provided)
+  const findTeamId = (teamName: string) => {
+    const match = teamRows.find((t) => t.name.toLowerCase() === teamName.toLowerCase());
+    return match?.id;
+  };
+  const historical = (setup.historicalMatches ?? []).map((hm) => ({
+    homeTeamId: findTeamId(hm.homeTeam),
+    awayTeamId: findTeamId(hm.awayTeam),
+    homeScore: hm.homeScore,
+    awayScore: hm.awayScore,
+  })).filter((m) => m.homeTeamId && m.awayTeamId);
+
+  // 4. Fixtures
   if (setup.generateFixtures) {
     const fixtures = generateRoundRobin(
       teamRows.map((t) => t.id),
       setup.doubleRound,
     );
 
-    if (fixtures.length > 0) {
-      await db.insert(match).values(
-        fixtures.map((f) => ({
+    const matchesToInsert = fixtures.map((f) => {
+      const hist = historical.find(
+        (h) => (h.homeTeamId === f.home && h.awayTeamId === f.away) || 
+               (h.homeTeamId === f.away && h.awayTeamId === f.home)
+      );
+      if (hist) {
+        // Swap scores if home/away are reversed
+        const isReversed = hist.homeTeamId === f.away;
+        return {
           tournamentId,
           round: f.round,
           homeTeamId: f.home,
           awayTeamId: f.away,
-        })),
-      );
+          homeScore: isReversed ? hist.awayScore : hist.homeScore,
+          awayScore: isReversed ? hist.homeScore : hist.awayScore,
+          status: "played" as const,
+        };
+      }
+      return {
+        tournamentId,
+        round: f.round,
+        homeTeamId: f.home,
+        awayTeamId: f.away,
+        homeScore: null,
+        awayScore: null,
+        status: "scheduled" as const,
+      };
+    });
+
+    if (matchesToInsert.length > 0) {
+      await db.insert(match).values(matchesToInsert);
     }
+  } else if (historical.length > 0) {
+    // Only historical matches, no full round robin
+    const matchesToInsert = historical.map((h) => ({
+      tournamentId,
+      round: 1,
+      homeTeamId: h.homeTeamId!,
+      awayTeamId: h.awayTeamId!,
+      homeScore: h.homeScore,
+      awayScore: h.awayScore,
+      status: "played" as const,
+    }));
+    await db.insert(match).values(matchesToInsert);
   }
 
   revalidatePath("/");

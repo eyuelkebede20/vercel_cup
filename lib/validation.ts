@@ -22,6 +22,12 @@ export const tournamentSetupSchema = z.object({
   generateFixtures: z.boolean().default(true),
   // Optional explicit names; pad/truncate to teamCount server-side.
   teamNames: z.array(z.string().trim().max(40)).default([]),
+  historicalMatches: z.array(z.object({
+    homeTeam: z.string(),
+    awayTeam: z.string(),
+    homeScore: z.number().int().min(0),
+    awayScore: z.number().int().min(0)
+  })).default([]),
 });
 
 export type TournamentSetup = z.infer<typeof tournamentSetupSchema>;
