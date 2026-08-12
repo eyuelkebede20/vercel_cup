@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/session";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import { ResultCard } from "@/components/ResultCard";
 import { FixtureCard } from "@/components/FixtureCard";
+import { DeleteLeagueButton } from "@/components/DeleteLeagueButton";
 import type { MatchView } from "@/lib/types";
 
 const SAMPLE_RESULT: MatchView = {
@@ -172,19 +173,19 @@ export default async function HomePage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {myTournaments.map((t) => (
-                <Link
-                  key={t.id}
-                  href={`/t/${t.id}`}
-                  className="card border border-base-200 bg-base-100 transition hover:border-primary"
-                >
-                  <div className="card-body">
-                    <h3 className="card-title">{t.name}</h3>
+                <div key={t.id} className="relative card border border-base-200 bg-base-100 transition hover:border-primary">
+                  <Link
+                    href={`/t/${t.id}`}
+                    className="card-body"
+                  >
+                    <h3 className="card-title pr-6">{t.name}</h3>
                     <p className="text-sm opacity-60">
                       {t.teamCount} teams · {t.playersPerTeam} players/side
                       {t.doubleRound ? " · home & away" : ""}
                     </p>
-                  </div>
-                </Link>
+                  </Link>
+                  <DeleteLeagueButton tournamentId={t.id} />
+                </div>
               ))}
             </div>
           )}

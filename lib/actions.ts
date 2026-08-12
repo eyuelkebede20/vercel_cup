@@ -148,37 +148,55 @@ export async function regenerateFixtures(tournamentId: string): Promise<void> {
   const teamRows = await db
     .select({ id: team.id })
     .from(team)
-    .where(eq(team.tournamentId, tournamentId))
-    .orderBy(asc(team.name));
+    .where(eq(team.tournamentId, tournamentId));
 
-  // Find matches so we can defensively delete goals, in case DB constraints are missing
   const matchRows = await db
-    .select({ id: match.id })
+    .select()
     .from(match)
     .where(eq(match.tournamentId, tournamentId));
 
-  if (matchRows.length > 0) {
-    const matchIds = matchRows.map((m) => m.id);
-    await db.delete(goal).where(inArray(goal.matchId, matchIds));
+  const playedMatches = matchRows.filter((m) => m.status === "played");
+  const scheduledMatches = matchRows.filter((m) => m.status !== "played");
+
+  // Only delete the unplayed fixtures
+  if (scheduledMatches.length > 0) {
+    const scheduledIds = scheduledMatches.map((m) => m.id);
+    await db.delete(match).where(inArray(match.id, scheduledIds));
   }
 
-  // Now delete the matches
-  await db.delete(match).where(eq(match.tournamentId, tournamentId));
+  // Shuffle teams for new variants
+  const shuffledIds = teamRows.map((r) => r.id).sort(() => Math.random() - 0.5);
+  const fixtures = generateRoundRobin(shuffledIds, t.doubleRound);
 
-  const fixtures = generateRoundRobin(
-    teamRows.map((r) => r.id),
-    t.doubleRound,
-  );
+  const matchesToInsert = [];
+  const consumedPlayedMatches = new Set<string>();
 
-  if (fixtures.length > 0) {
-    await db.insert(match).values(
-      fixtures.map((f) => ({
+  for (const f of fixtures) {
+    const playedHist = playedMatches.find(
+      (m) =>
+        !consumedPlayedMatches.has(m.id) &&
+        ((m.homeTeamId === f.home && m.awayTeamId === f.away) ||
+          (m.homeTeamId === f.away && m.awayTeamId === f.home))
+    );
+
+    if (playedHist) {
+      consumedPlayedMatches.add(playedHist.id);
+      await db.update(match).set({ round: f.round }).where(eq(match.id, playedHist.id));
+    } else {
+      matchesToInsert.push({
         tournamentId,
         round: f.round,
         homeTeamId: f.home,
         awayTeamId: f.away,
-      })),
-    );
+        homeScore: null,
+        awayScore: null,
+        status: "scheduled" as const,
+      });
+    }
+  }
+
+  if (matchesToInsert.length > 0) {
+    await db.insert(match).values(matchesToInsert);
   }
 
   revalidatePath(`/t/${tournamentId}`, "layout");
@@ -203,6 +221,19 @@ export async function createMatch(input: {
   });
 
   revalidatePath(`/t/${parsed.tournamentId}`, "layout");
+}
+
+/* ----------------------------- delete match ------------------------------ */
+
+export async function deleteMatch(matchId: string): Promise<void> {
+  const m = await db.query.match.findFirst({
+    where: eq(match.id, matchId),
+  });
+  if (!m) throw new Error("NOT_FOUND");
+  await requireOwnedTournament(m.tournamentId);
+
+  await db.delete(match).where(eq(match.id, matchId));
+  revalidatePath(`/t/${m.tournamentId}`, "layout");
 }
 
 /* ----------------------------- rename ------------------------------ */

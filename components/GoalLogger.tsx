@@ -198,6 +198,17 @@ export function GoalLogger({
           )}
         </button>
         {saved && <span className="text-sm text-success">✓ Saved</span>}
+        <button
+          className="btn btn-outline btn-error"
+          onClick={async () => {
+            if (confirm("Delete this match completely?")) {
+              const { deleteMatch } = await import("@/lib/actions");
+              await deleteMatch(matchId);
+            }
+          }}
+        >
+          Delete match
+        </button>
       </div>
     </div>
   );

@@ -49,7 +49,7 @@ export function MatchLogger({
       </button>
 
       {open && (
-        <div className="border-t border-base-200 p-4">
+        <div className="border-t border-base-200 p-4 relative">
           <GoalLogger
             matchId={matchId}
             home={home}
