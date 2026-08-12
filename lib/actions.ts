@@ -282,7 +282,9 @@ export async function deletePlayer(playerId: string): Promise<void> {
 // per side, then persisted onto the match for cheap reads.
 export async function logResult(input: {
   matchId: string;
-  goals: { teamId: string; scorerId: string; minute: number | null }[];
+  goals?: { teamId: string; scorerId: string; minute: number | null }[];
+  homeScore?: number;
+  awayScore?: number;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   let parsed;
   try {
@@ -304,8 +306,13 @@ export async function logResult(input: {
     }
   }
 
-  const homeScore = parsed.goals.filter((g) => g.teamId === m.homeTeamId).length;
-  const awayScore = parsed.goals.filter((g) => g.teamId === m.awayTeamId).length;
+  const homeScore = parsed.homeScore !== undefined 
+    ? parsed.homeScore 
+    : parsed.goals.filter((g) => g.teamId === m.homeTeamId).length;
+    
+  const awayScore = parsed.awayScore !== undefined 
+    ? parsed.awayScore 
+    : parsed.goals.filter((g) => g.teamId === m.awayTeamId).length;
 
   // Replace this match's goals, then persist the derived score.
   await db.delete(goal).where(eq(goal.matchId, m.id));

@@ -28,11 +28,15 @@ export function GoalLogger({
   home,
   away,
   initialGoals,
+  initialHomeScore,
+  initialAwayScore,
 }: {
   matchId: string;
   home: SideData;
   away: SideData;
   initialGoals: { teamId: string; scorerId: string }[];
+  initialHomeScore?: number | null;
+  initialAwayScore?: number | null;
 }) {
   const router = useRouter();
 
@@ -58,8 +62,12 @@ export function GoalLogger({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const homeScore = goals.filter((g) => g.teamId === home.teamId).length;
-  const awayScore = goals.filter((g) => g.teamId === away.teamId).length;
+  // If there are goals, score is derived. Otherwise it falls back to the manual override.
+  const [manualHome, setManualHome] = useState(initialHomeScore ?? 0);
+  const [manualAway, setManualAway] = useState(initialAwayScore ?? 0);
+
+  const homeScore = goals.length > 0 ? goals.filter((g) => g.teamId === home.teamId).length : manualHome;
+  const awayScore = goals.length > 0 ? goals.filter((g) => g.teamId === away.teamId).length : manualAway;
 
   function addGoal(teamId: string, p: Player) {
     setSaved(false);
@@ -90,6 +98,8 @@ export function GoalLogger({
         scorerId: g.scorerId,
         minute: null,
       })),
+      homeScore: goals.length > 0 ? undefined : manualHome,
+      awayScore: goals.length > 0 ? undefined : manualAway,
     });
     setSaving(false);
     if (!res.ok) {
@@ -107,11 +117,31 @@ export function GoalLogger({
         <span className="flex-1 truncate text-right font-semibold">
           {home.name}
         </span>
-        <span className="rounded-box bg-base-200 px-4 py-2 text-3xl font-extrabold tabular-nums">
-          {homeScore}
-          <span className="mx-2 opacity-30">–</span>
-          {awayScore}
-        </span>
+        <div className="flex items-center gap-2 rounded-box bg-base-200 px-4 py-2 text-3xl font-extrabold tabular-nums">
+          {goals.length > 0 ? (
+            <span>{homeScore}</span>
+          ) : (
+            <input 
+              type="number" 
+              min="0"
+              className="w-12 bg-transparent text-center outline-none" 
+              value={manualHome} 
+              onChange={(e) => setManualHome(parseInt(e.target.value) || 0)} 
+            />
+          )}
+          <span className="opacity-30">–</span>
+          {goals.length > 0 ? (
+            <span>{awayScore}</span>
+          ) : (
+            <input 
+              type="number" 
+              min="0"
+              className="w-12 bg-transparent text-center outline-none" 
+              value={manualAway} 
+              onChange={(e) => setManualAway(parseInt(e.target.value) || 0)} 
+            />
+          )}
+        </div>
         <span className="flex-1 truncate text-left font-semibold">
           {away.name}
         </span>

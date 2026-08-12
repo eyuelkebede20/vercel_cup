@@ -68,6 +68,8 @@ export const goalInputSchema = z.object({
 export const logResultSchema = z.object({
   matchId: z.string().uuid(),
   goals: z.array(goalInputSchema).default([]),
+  homeScore: z.number().int().min(0).optional(),
+  awayScore: z.number().int().min(0).optional(),
 });
 
 export type LogResultInput = z.infer<typeof logResultSchema>;

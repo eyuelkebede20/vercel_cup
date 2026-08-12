@@ -55,6 +55,8 @@ export function MatchLogger({
             home={home}
             away={away}
             initialGoals={initialGoals}
+            initialHomeScore={homeScore}
+            initialAwayScore={awayScore}
           />
         </div>
       )}
