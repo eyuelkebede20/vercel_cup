@@ -6,7 +6,6 @@ import { getCurrentUser } from "@/lib/session";
 // Node runtime — the Gemini key stays server-side; the browser never talks to
 // Google directly.
 export const runtime = "nodejs";
-export const maxDuration = 60;
 
 const bodySchema = z.object({
   messages: z
