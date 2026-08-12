@@ -1,0 +1,15 @@
+{
+  "team1": {
+    "name": "dani",
+    "age": 12
+  },
+  "team2": {
+    "name": "eyuel",
+    "age": 27,
+    "university":{
+        "name":"ETDU"
+    }
+  }
+}
+
+/team2/nam

@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/session";
 // Node runtime — the Gemini key stays server-side; the browser never talks to
 // Google directly.
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const bodySchema = z.object({
   messages: z
@@ -38,10 +39,7 @@ export async function POST(req: Request) {
     return NextResponse.json(turn);
   } catch (err) {
     console.error("chat turn failed", err);
-    const message =
-      err instanceof Error && err.message.includes("GEMINI_API_KEY")
-        ? "The AI assistant isn't configured (missing GEMINI_API_KEY)."
-        : "The assistant had trouble. Please try again.";
+    const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
