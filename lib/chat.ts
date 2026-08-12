@@ -11,7 +11,7 @@ export type ChatMessage = { role: "user" | "assistant"; content: string };
 
 // A fast Flash model drives the conversational setup. Verify the current model
 // name in Google's docs; override with GEMINI_MODEL if needed.
-const MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+const MODEL = process.env.GEMINI_MODEL ?? "gemini-flash-latest";
 
 const SYSTEM_PROMPT = `You are MatchDay's setup assistant. Your only job is to collect the information needed to
 create a round-robin football league through short, friendly conversation.
