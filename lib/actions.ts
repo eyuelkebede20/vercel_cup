@@ -164,8 +164,13 @@ export async function regenerateFixtures(tournamentId: string): Promise<void> {
     await db.delete(match).where(inArray(match.id, scheduledIds));
   }
 
-  // Shuffle teams for new variants
-  const shuffledIds = teamRows.map((r) => r.id).sort(() => Math.random() - 0.5);
+  // Shuffle teams for new variants (Fisher-Yates)
+  const shuffledIds = teamRows.map((r) => r.id);
+  for (let i = shuffledIds.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledIds[i], shuffledIds[j]] = [shuffledIds[j], shuffledIds[i]];
+  }
+  
   const fixtures = generateRoundRobin(shuffledIds, t.doubleRound);
 
   const matchesToInsert = [];
