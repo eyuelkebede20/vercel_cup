@@ -1,8 +1,24 @@
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, desc, sql } from "drizzle-orm";
 import { db } from "./db";
 import { tournament, team, player, match, goal } from "./db/schema";
 import type { Match, Team } from "./db/schema";
 import type { MatchView } from "./types";
+
+export async function getTopScorers(tournamentId: string) {
+  return db
+    .select({
+      id: player.id,
+      name: player.name,
+      teamName: team.name,
+      goals: sql<number>`cast(count(${goal.id}) as int)`,
+    })
+    .from(goal)
+    .innerJoin(player, eq(goal.scorerId, player.id))
+    .innerJoin(team, eq(player.teamId, team.id))
+    .where(eq(team.tournamentId, tournamentId))
+    .groupBy(player.id, team.name)
+    .orderBy(desc(sql`count(${goal.id})`));
+}
 
 export async function getTournament(tournamentId: string) {
   return db.query.tournament.findFirst({

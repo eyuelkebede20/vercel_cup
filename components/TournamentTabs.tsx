@@ -16,6 +16,7 @@ export function TournamentTabs({
   const tabs = [
     { href: base, label: "Fixtures", exact: true },
     { href: `${base}/standings`, label: "Standings" },
+    { href: `${base}/scorers`, label: "Top Scorers" },
     { href: `${base}/teams`, label: "Players" },
     { href: `${base}/cards`, label: "Share cards" },
     ...(isOwner ? [{ href: `${base}/admin`, label: "Admin" }] : []),
