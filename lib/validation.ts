@@ -19,6 +19,7 @@ export const tournamentSetupSchema = z.object({
     .min(MIN_PLAYERS_PER_TEAM)
     .max(MAX_PLAYERS_PER_TEAM),
   doubleRound: z.coerce.boolean().default(false),
+  generateFixtures: z.boolean().default(true),
   // Optional explicit names; pad/truncate to teamCount server-side.
   teamNames: z.array(z.string().trim().max(40)).default([]),
 });
@@ -64,3 +65,11 @@ export const logResultSchema = z.object({
 });
 
 export type LogResultInput = z.infer<typeof logResultSchema>;
+
+export const createMatchSchema = z.object({
+  tournamentId: z.string().uuid(),
+  homeTeamId: z.string().uuid(),
+  awayTeamId: z.string().uuid(),
+  round: z.coerce.number().int().min(1),
+});
+

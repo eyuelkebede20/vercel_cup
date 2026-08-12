@@ -5,6 +5,7 @@ import { player, goal } from "@/lib/db/schema";
 import { getTournament, getTeams, getMatches, teamMap } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { MatchLogger } from "@/components/MatchLogger";
+import { AddMatch } from "@/components/AddMatch";
 import type { Player } from "@/lib/db/schema";
 
 export default async function AdminPage({
@@ -113,6 +114,10 @@ export default async function AdminPage({
           </div>
         </section>
       ))}
+
+      <section className="pt-4">
+        <AddMatch tournamentId={tournamentId} teams={teams.map(t => ({ id: t.id, name: t.name }))} />
+      </section>
     </div>
   );
 }

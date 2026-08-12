@@ -11,6 +11,7 @@ import {
   playerSchema,
   renameTeamSchema,
   logResultSchema,
+  createMatchSchema,
   type TournamentSetup,
 } from "./validation";
 
@@ -68,21 +69,23 @@ export async function createTournament(
     )
     .returning({ id: team.id });
 
-  // 3. Fixtures — single round-robin (doubled if requested).
-  const fixtures = generateRoundRobin(
-    teamRows.map((t) => t.id),
-    setup.doubleRound,
-  );
-
-  if (fixtures.length > 0) {
-    await db.insert(match).values(
-      fixtures.map((f) => ({
-        tournamentId,
-        round: f.round,
-        homeTeamId: f.home,
-        awayTeamId: f.away,
-      })),
+  // 3. Fixtures — single round-robin (doubled if requested), if requested.
+  if (setup.generateFixtures) {
+    const fixtures = generateRoundRobin(
+      teamRows.map((t) => t.id),
+      setup.doubleRound,
     );
+
+    if (fixtures.length > 0) {
+      await db.insert(match).values(
+        fixtures.map((f) => ({
+          tournamentId,
+          round: f.round,
+          homeTeamId: f.home,
+          awayTeamId: f.away,
+        })),
+      );
+    }
   }
 
   revalidatePath("/");
@@ -132,8 +135,28 @@ export async function regenerateFixtures(tournamentId: string): Promise<void> {
     );
   }
 
-  revalidatePath(`/t/${tournamentId}`);
-  revalidatePath(`/t/${tournamentId}/standings`);
+  revalidatePath(`/t/${tournamentId}`, "layout");
+}
+
+/* ----------------------------- create match ------------------------------ */
+
+export async function createMatch(input: {
+  tournamentId: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  round: number;
+}): Promise<void> {
+  const parsed = createMatchSchema.parse(input);
+  await requireOwnedTournament(parsed.tournamentId);
+
+  await db.insert(match).values({
+    tournamentId: parsed.tournamentId,
+    homeTeamId: parsed.homeTeamId,
+    awayTeamId: parsed.awayTeamId,
+    round: parsed.round,
+  });
+
+  revalidatePath(`/t/${parsed.tournamentId}`, "layout");
 }
 
 /* ----------------------------- rename ------------------------------ */
@@ -149,7 +172,7 @@ export async function renameTeam(input: {
   await requireOwnedTournament(row.tournamentId);
 
   await db.update(team).set({ name }).where(eq(team.id, teamId));
-  revalidatePath(`/t/${row.tournamentId}`);
+  revalidatePath(`/t/${row.tournamentId}`, "layout");
 }
 
 /* ----------------------------- players ----------------------------- */
@@ -188,7 +211,7 @@ export async function addPlayer(input: {
     };
   }
 
-  revalidatePath(`/t/${row.tournamentId}/teams/${parsed.teamId}`);
+  revalidatePath(`/t/${row.tournamentId}`, "layout");
   return { ok: true };
 }
 
@@ -204,7 +227,7 @@ export async function deletePlayer(playerId: string): Promise<void> {
   await requireOwnedTournament(teamRow.tournamentId);
 
   await db.delete(player).where(eq(player.id, playerId));
-  revalidatePath(`/t/${teamRow.tournamentId}/teams/${row.teamId}`);
+  revalidatePath(`/t/${teamRow.tournamentId}`, "layout");
 }
 
 /* --------------------------- log result ---------------------------- */
@@ -256,10 +279,7 @@ export async function logResult(input: {
     .set({ homeScore, awayScore, status: "played" })
     .where(eq(match.id, m.id));
 
-  revalidatePath(`/t/${m.tournamentId}/admin`);
-  revalidatePath(`/t/${m.tournamentId}`);
-  revalidatePath(`/t/${m.tournamentId}/standings`);
-  revalidatePath(`/t/${m.tournamentId}/cards`);
+  revalidatePath(`/t/${m.tournamentId}`, "layout");
   return { ok: true };
 }
 

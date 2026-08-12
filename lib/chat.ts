@@ -17,7 +17,7 @@ const SYSTEM_PROMPT = `You are MatchDay's setup assistant. Your only job is to c
 create a round-robin football league through short, friendly conversation.
 
 Required: tournamentName, teamCount (integer ${MIN_TEAMS}-${MAX_TEAMS}), playersPerTeam (integer ${MIN_PLAYERS_PER_TEAM}-${MAX_PLAYERS_PER_TEAM}).
-Optional: doubleRound (true if teams play home AND away; default false), teamNames (a list).
+Optional: doubleRound (true if teams play home AND away; default false), teamNames (a list), generateFixtures (boolean, whether to auto-generate a round-robin schedule; default true).
 
 Rules:
 - Ask for ONE missing field at a time. Keep replies to a sentence or two.
@@ -45,9 +45,10 @@ const responseSchema = {
         teamCount: { type: SchemaType.NUMBER },
         playersPerTeam: { type: SchemaType.NUMBER },
         doubleRound: { type: SchemaType.BOOLEAN },
+        generateFixtures: { type: SchemaType.BOOLEAN },
         teamNames: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
       },
-      required: ["tournamentName", "teamCount", "playersPerTeam", "doubleRound", "teamNames"],
+      required: ["tournamentName", "teamCount", "playersPerTeam", "doubleRound", "generateFixtures", "teamNames"],
     },
   },
   required: ["status", "reply", "payload"],

@@ -21,6 +21,7 @@ export function SetupWizard() {
   const [playersPerTeam, setPlayersPerTeam] = useState(5);
   const [doubleRound, setDoubleRound] = useState(false);
   const [teamNames, setTeamNames] = useState<string[]>([]);
+  const [generateFixtures, setGenerateFixtures] = useState(true);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export function SetupWizard() {
         teamCount,
         playersPerTeam,
         doubleRound,
+        generateFixtures,
         teamNames: teamNames.map((n) => n.trim()),
       });
       router.push(`/t/${tournamentId}`);
@@ -133,6 +135,18 @@ export function SetupWizard() {
               />
               <span className="label-text">
                 Home &amp; away (each pairing plays twice)
+              </span>
+            </label>
+
+            <label className="label cursor-pointer justify-start gap-3">
+              <input
+                type="checkbox"
+                className="toggle toggle-primary"
+                checked={generateFixtures}
+                onChange={(e) => setGenerateFixtures(e.target.checked)}
+              />
+              <span className="label-text">
+                Auto-generate fixtures (round-robin schedule)
               </span>
             </label>
 
