@@ -124,7 +124,7 @@ export function GoalLogger({
             <input 
               type="number" 
               min="0"
-              className="w-12 bg-transparent text-center outline-none" 
+              className="input input-bordered w-20 text-center font-bold text-2xl" 
               value={manualHome} 
               onChange={(e) => setManualHome(parseInt(e.target.value) || 0)} 
             />
@@ -136,7 +136,7 @@ export function GoalLogger({
             <input 
               type="number" 
               min="0"
-              className="w-12 bg-transparent text-center outline-none" 
+              className="input input-bordered w-20 text-center font-bold text-2xl" 
               value={manualAway} 
               onChange={(e) => setManualAway(parseInt(e.target.value) || 0)} 
             />
