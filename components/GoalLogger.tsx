@@ -63,11 +63,11 @@ export function GoalLogger({
   const [error, setError] = useState<string | null>(null);
 
   // If there are goals, score is derived. Otherwise it falls back to the manual override.
-  const [manualHome, setManualHome] = useState(initialHomeScore ?? 0);
-  const [manualAway, setManualAway] = useState(initialAwayScore ?? 0);
+  const [manualHomeStr, setManualHomeStr] = useState(initialHomeScore?.toString() ?? "0");
+  const [manualAwayStr, setManualAwayStr] = useState(initialAwayScore?.toString() ?? "0");
 
-  const homeScore = goals.length > 0 ? goals.filter((g) => g.teamId === home.teamId).length : manualHome;
-  const awayScore = goals.length > 0 ? goals.filter((g) => g.teamId === away.teamId).length : manualAway;
+  const homeScore = goals.length > 0 ? goals.filter((g) => g.teamId === home.teamId).length : (parseInt(manualHomeStr, 10) || 0);
+  const awayScore = goals.length > 0 ? goals.filter((g) => g.teamId === away.teamId).length : (parseInt(manualAwayStr, 10) || 0);
 
   function addGoal(teamId: string, p: Player) {
     setSaved(false);
@@ -98,8 +98,8 @@ export function GoalLogger({
         scorerId: g.scorerId,
         minute: null,
       })),
-      homeScore: goals.length > 0 ? undefined : manualHome,
-      awayScore: goals.length > 0 ? undefined : manualAway,
+      homeScore: goals.length > 0 ? undefined : (parseInt(manualHomeStr, 10) || 0),
+      awayScore: goals.length > 0 ? undefined : (parseInt(manualAwayStr, 10) || 0),
     });
     setSaving(false);
     if (!res.ok) {
@@ -125,8 +125,8 @@ export function GoalLogger({
               type="number" 
               min="0"
               className="input input-bordered w-20 text-center font-bold text-2xl" 
-              value={manualHome} 
-              onChange={(e) => setManualHome(parseInt(e.target.value) || 0)} 
+              value={manualHomeStr} 
+              onChange={(e) => setManualHomeStr(e.target.value)} 
             />
           )}
           <span className="opacity-30">–</span>
@@ -137,8 +137,8 @@ export function GoalLogger({
               type="number" 
               min="0"
               className="input input-bordered w-20 text-center font-bold text-2xl" 
-              value={manualAway} 
-              onChange={(e) => setManualAway(parseInt(e.target.value) || 0)} 
+              value={manualAwayStr} 
+              onChange={(e) => setManualAwayStr(e.target.value)} 
             />
           )}
         </div>

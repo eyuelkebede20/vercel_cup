@@ -4,16 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { regenerateFixtures } from "@/lib/actions";
 
-// Regenerating clears existing matches + goals, so warn first.
+// Regenerating clears existing matches + goals. We removed the warn prompt
+// to let the user "shuffle" rapidly until they get a fixture list they like.
 export function RegenerateButton({ tournamentId }: { tournamentId: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   async function run() {
-    const ok = window.confirm(
-      "Regenerate fixtures? This clears all existing matches and logged goals.",
-    );
-    if (!ok) return;
     setBusy(true);
     try {
       await regenerateFixtures(tournamentId);
@@ -25,7 +22,7 @@ export function RegenerateButton({ tournamentId }: { tournamentId: string }) {
 
   return (
     <button className="btn btn-sm btn-ghost" onClick={run} disabled={busy}>
-      {busy ? <span className="loading loading-spinner loading-xs" /> : "↻ Regenerate"}
+      {busy ? <span className="loading loading-spinner loading-xs" /> : "↻ Shuffle"}
     </button>
   );
 }
