@@ -55,6 +55,7 @@ export function SetupWizard() {
         doubleRound,
         generateFixtures,
         teamNames: teamNames.map((n) => n.trim()),
+        historicalMatches: [],
       });
       router.push(`/t/${tournamentId}`);
     } catch (err) {
